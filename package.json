@@ -1,4 +1,7 @@
 {
+  "scripts": {
+  "dev": "ts-node-dev --respawn --transpile-only index.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.12.0",
     "bcryptjs": "^3.0.2",
