@@ -61,3 +61,23 @@ export const signIn = async (req: Request, res: Response) => {
 
     }
 }
+
+export const refreshToken = async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Token não fornecido" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+        const newToken = jwt.sign({ userId: decoded.userId }, JWT_SECRET, { expiresIn: '1d' });
+
+        res.status(200).json({ token: newToken });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+    }
+
+
+}
