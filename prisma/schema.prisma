@@ -8,10 +8,54 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String   @default("")
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId        String        @id @default(cuid())
+  name          String
+  email         String        @unique
+  password      String
+  phone         String?       @unique
+  birthDate     DateTime?
+  createAt      DateTime?     @default(now())
+  isActive      Boolean?      @default(true)
+  verifiedEmail Boolean?      @default(false)
+
+  roles         UsersRoles[]
+}
+
+model Permission {
+  permissionId String            @id @default(cuid())
+  description  String            @db.VarChar(50)
+  isActive     Boolean?          @default(true)
+
+  roles        RolesPermissions[]
+}
+
+model Role {
+  roleId      String            @id @default(cuid())
+  description String            @db.VarChar(50)
+  isActive    Boolean?          @default(true)
+
+  permissions RolesPermissions[]
+  users       UsersRoles[]
+}
+
+model RolesPermissions {
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [roleId])
+  permission   Permission @relation(fields: [permissionId], references: [permissionId])
+
+  @@id([roleId, permissionId])
+  @@map("roles_permissions")
+}
+
+model UsersRoles {
+  userId String
+  roleId String
+
+  user   User @relation(fields: [userId], references: [userId])
+  role   Role @relation(fields: [roleId], references: [roleId])
+
+  @@id([userId, roleId])
+  @@map("users_roles")
 }

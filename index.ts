@@ -9,5 +9,5 @@ app.use('/auth', authRoutes);
 app.use('/', indexRoutes);
 
 app.listen(3000, () => {
-  console.log('Servidor rodando em http://localhost:3000');
+  console.log('Estamos navegando em http://localhost:3000');
 });

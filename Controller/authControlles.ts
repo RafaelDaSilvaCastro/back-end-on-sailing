@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../Model/prismaClient'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'teste'
+const JWT_SECRET = process.env.JWT_SECRET || String(new Date().getTime());
 
 export const signUp = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
@@ -25,7 +25,7 @@ export const signUp = async (req: Request, res: Response) => {
             }
         });
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ userId: user.userId }, JWT_SECRET, { expiresIn: '1d' });
 
         res.status(200).json({ token });
 
@@ -35,3 +35,29 @@ export const signUp = async (req: Request, res: Response) => {
 
     }
 };
+
+export const signIn = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    try{
+        const user = await prisma.user.findUnique({ where: { email }})
+
+        if(!user){
+            return res.status(400).json({ error: "Email ou senha inválidos" });
+        }
+        else{
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+
+            if(!isPasswordValid){
+                return res.status(400).json({ error: "Email ou senha inválidos" });
+            }
+
+            const token = jwt.sign({ userId: user.userId }, JWT_SECRET, { expiresIn: '1d' });
+
+            res.status(200).json({ token });
+        }
+    }
+    catch(err){
+
+    }
+}
