@@ -6,7 +6,7 @@ import { prisma } from '../Model/prismaClient'
 const JWT_SECRET = process.env.JWT_SECRET || String(new Date().getTime());
 
 export const signUp = async (req: Request, res: Response) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, birthDate } = req.body;
 
     try {
         const existsEmail = await prisma.user.findUnique({ where: { email } });
@@ -21,7 +21,9 @@ export const signUp = async (req: Request, res: Response) => {
             data: {
                 name,
                 email,
-                password: hashPassword
+                password: hashPassword, 
+                phone: phone || null,
+                birthDate: birthDate ? new Date(birthDate) : null
             }
         });
 
@@ -81,3 +83,50 @@ export const refreshToken = async (req: Request, res: Response) => {
 
 
 }
+
+export const updateUser = async (req: Request, res: Response) => {
+    const { id, name, email, phone, birthDate, isActive } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Token não fornecido" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const userId = decoded.userId;
+
+        const existingUser = await prisma.user.findUnique({ where: { userId } });
+
+        if (!existingUser) {
+            return res.status(404).json({ error: "Usuário não encontrado" });
+        }
+
+        if (id !== existingUser.userId) {
+            return res.status(400).json({ error: "ID do usuário não corresponde ao usuário autenticado" });
+        }
+
+        if (email && email !== existingUser.email) {
+            const emailTaken = await prisma.user.findUnique({ where: { email } });
+            if (emailTaken) {
+                return res.status(400).json({ error: "Email já cadastrado" });
+            }
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { userId },
+            data: {
+                name: name || existingUser.name,
+                email: email || existingUser.email,
+                phone: phone !== undefined ? phone : existingUser.phone,
+                birthDate: birthDate ? new Date(birthDate) : existingUser.birthDate,
+                isActive: isActive !== undefined ? isActive : existingUser.isActive
+            }
+        });
+
+        res.status(200).json({ message: "Usuário atualizado com sucesso", user: updatedUser });
+
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao atualizar usuário", details: error });
+    }
+};
