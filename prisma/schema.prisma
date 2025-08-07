@@ -14,4 +14,36 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Vessel    Vessel[]
+}
+
+model Vessel {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                String
+  registrationNumber  String    @unique
+  type                String
+  expirationDate      DateTime
+  activity            String
+  grossTonnage        Float
+  ownerName           String
+  ownerCnpj           String? // Opcional, pode não ser uma empresa
+  fiduciaryAlienation Boolean   @default(false)
+  constructionYear    Int
+  hullMaterial        String
+  length              Float
+  beam                Float
+  hullNumber          String
+  propulsionType      String
+  engineQuantity      Int
+  navigationArea      String
+  crewCapacity        Int
+  passengerCapacity   Int
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relação com o Usuário
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  @@map("vessels")
 }
